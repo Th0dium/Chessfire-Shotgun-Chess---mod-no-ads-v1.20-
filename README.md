@@ -1,10 +1,18 @@
 # Chessfire: Shotgun Chess — No Ads Mod (v1.20)
 
+![Cover](assets/image.png)
+
 ![Platform](https://img.shields.io/badge/Platform-Android-green.svg)
 ![Type](https://img.shields.io/badge/Patch-ARM64%20Binary-red.svg)
 ![Status](https://img.shields.io/badge/Status-Stable-brightgreen.svg)
 
 A binary-level patch for **Chessfire: Shotgun Chess** (Unity IL2CPP, ARM64) that removes ads and unlocks ad-gated rewards. No mod menu, no APK mod tools — just direct hex editing of `libil2cpp.so`.
+
+---
+
+## Screenshots
+
+![Gameplay](assets/use_your_gun.png)
 
 ---
 
