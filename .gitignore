@@ -1,0 +1,16 @@
+# Android/Unity junk
+*.apk
+*.zip
+*.log
+split_extracted/
+build/
+temp/
+
+# Python junk
+__pycache__/
+*.py[cod]
+*.class
+
+# IDE junk
+.vscode/
+.idea/
