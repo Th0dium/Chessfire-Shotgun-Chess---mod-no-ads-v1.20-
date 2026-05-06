@@ -47,7 +47,6 @@ The root cause: Chessfire initializes its UI and Shop components very early in t
 
 The working approach was to go *lower* in the stack — patch the receipt validation layer instead of the granting layer. The game never gets a chance to dispute whether you paid; it just sees valid receipts everywhere and moves on.
 
-See [`docs/modding_summary.md`](docs/modding_summary.md) for the full breakdown of what was tried and why most of it didn't work.
 
 ---
 
