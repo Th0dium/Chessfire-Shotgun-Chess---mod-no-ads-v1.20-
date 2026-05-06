@@ -13,13 +13,13 @@ A binary-level patch for **Chessfire: Shotgun Chess** (Unity IL2CPP, ARM64) that
 - Removes mandatory video ads and interstitial pop-ups.
 - Unlocks all "Watch Ad to claim" rewards instantly (Gems, Chests, Revives).
 
-That's it. No god mode, no unlimited gems — just making the game actually playable without sitting through ads.
+No god mode, no unlimited gems — just making the game playable without sitting through ads.
 
 ---
 
 ## How it works
 
-The game uses Unity's IL2CPP backend, which compiles C# into native ARM64 machine code. There's no bytecode to edit — you work directly with the binary.
+The game uses Unity's IL2CPP backend, which compiles C# into native ARM64 machine code. There's no bytecode to edit — you work directly with the binary. (most of the technical understanding here came from working with AI throughout the process.)
 
 The mod patches three methods in `libil2cpp.so` that handle purchase validation:
 
@@ -35,19 +35,19 @@ Each patch is just 8 bytes: `MOV X0, #1` + `RET`. The game's higher-level system
 
 ## The process
 
-Worth noting upfront: I didn't have the source code. The starting point was just the APK pulled from my own phone via adb. Just a compiled binary and Il2CppDumper to get method signatures and offsets from the metadata.
+Worth noting upfront: I didn't have the source code. The starting point was just the APK pulled from my own phone via adb, a compiled binary and Il2CppDumper to get method signatures and offsets from the metadata.
 
 Everything here was reverse engineered from scratch.
 
-This took a lot longer than expected. Here's the honest version:
+This took longer than expected. The first obvious approach was to find the "grant item" functions and call them directly, patch `OnPurchaseFailed` to redirect to `OnPurchaseSuccessful`, hook the `Restore Purchases` flow, etc. Every attempt resulted in the game crashing on start or hanging at 50% of the loading bar.
 
-The first obvious approach was to find the "grant item" functions and call them directly — patch `OnPurchaseFailed` to redirect to `OnPurchaseSuccessful`, hook the `Restore Purchases` flow, etc. That all led to the game crash on start, or hanging at exactly 45% of the loading bar, every time.
+The root cause: Chessfire initializes its UI and Shop components early in the loading sequence, before the Inventory system is ready. Any patch touching item-granting logic during that window caused a silent deadlock - tricky to diagnose without source code.
 
-The root cause: Chessfire initializes its UI and Shop components very early in the loading sequence, before the Inventory system is ready. Any patch that touched item-granting logic during that window caused a silent deadlock. Without source code to trace the initialization order, this took a while to figure out.
+The working approach was to go *lower* in the stack - patch the receipt validation layer instead of the granting layer. The game never gets a chance to dispute whether you paid; it just sees valid receipts everywhere and moves on.
 
-The working approach was to go *lower* in the stack — patch the receipt validation layer instead of the granting layer. The game never gets a chance to dispute whether you paid; it just sees valid receipts everywhere and moves on.
+I also attempted to unlock premium in-app purchases like the Archer Hero, but it's not as simple as patching receipt validation. The no-ads purchase is a simple boolean flag, which is why it's straightforward to patch. The Archer Hero, on the other hand, requires not only a boolean flag but also actual data in the Inventory system - without it, the game crashes when trying to access the character.
 
-See [`docs/modding_summary.md`](docs/modding_summary.md) for the full breakdown of what was tried and why most of it didn't work.
+Bypassing premium purchases like the Archer Hero is probably doable, but the inventory data requirement makes it a harder problem for me to fully solve.
 
 ---
 
@@ -59,7 +59,7 @@ The mod ships as a Split APK (the game uses an app bundle, so you need both the 
 2. Install **SAI — Split APKs Installer** on your Android device via app store.
 3. Open SAI → "Install APKs" → select the zip file → Install.
 
-> The APK is signed with an Android debug key (the original signing key is obviously not available). You'll need to enable "Install from unknown sources" in your device settings.
+> The APK is signed with an Android debug key (the original signing key is not available). You'll need to enable "Install from unknown sources" in your device settings.
 
 ---
 
@@ -70,6 +70,7 @@ The mod ships as a Split APK (the game uses an app bundle, so you need both the 
 - **jar** — for repacking the APK without compression (critical for Split APKs)
 - **uber-apk-signer** — for re-signing
 - **SAI** — for installation
+- **AI agent (Gemini/Claude)** — for the actual binary analysis, offset calculation, and ARM64 assembly. I directed the process; the AI did the heavy lifting.
 
 ---
 
